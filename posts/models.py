@@ -34,3 +34,22 @@ class Post(models.Model):
 
     def __str__(self):
         return f'{self.id} {self.title}'
+
+class VideoPost(models.Model):
+
+    video_filter_choices = [ 
+    ('normal', 'Normal'), ('sepia', 'Sepia'), ('grayscale', 'Grayscale')
+    ]
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    video_url = models.URLField()
+    video_filter = models.CharField( max_length=32, choices=video_filter_choices, default='normal' )
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.id} {self.title}'

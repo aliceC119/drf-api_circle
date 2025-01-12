@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from posts.models import Post
+from posts.models import Post, VideoPost
 from likes.models import Like
 
 
@@ -40,6 +40,37 @@ class PostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
+        fields = [
+            'id', 'owner', 'is_owner', 'profile_id',
+            'profile_image', 'created_at', 'updated_at',
+            'title', 'content', 'image', 'image_filter',
+            'like_id', 'likes_count', 'comments_count',
+        ]
+
+class VideoPostSerializer(serializers.ModelSerializer):
+    owner = serializers.ReadOnlyField(source='owner.username')
+    is_owner = serializers.SerializerMethodField()
+    profile_id = serializers.ReadOnlyField(source='owner.profile.id')
+    profile_image = serializers.ReadOnlyField(source='owner.profile.image.url')
+    like_id = serializers.SerializerMethodField()
+    likes_count = serializers.ReadOnlyField()
+    comments_count = serializers.ReadOnlyField()
+
+    def validate_video(file): 
+        valid_mime_types = ['video/mp4', 'video/avi', 'video/mov'] 
+        max_file_size = 1280 * 720 * 5120 #1280 x 720 px 5GB
+
+        if file.content_type not in valid_mime_types: 
+            raise ValidationError('Unsupported file type.') 
+
+        if file.size > max_file_size: 
+            raise ValidationError('File too large. Size should not exceed 5 GB.') 
+            
+            return file
+
+
+    class Meta:
+        model = VideoPost
         fields = [
             'id', 'owner', 'is_owner', 'profile_id',
             'profile_image', 'created_at', 'updated_at',
