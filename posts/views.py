@@ -2,9 +2,9 @@ from django.db.models import Count
 from rest_framework import generics, permissions, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_api.permissions import IsOwnerOrReadOnly
-from .models import Post
+from .models import Post, SharedPost
 from .serializers import PostSerializer
-from .serializers import VideoPostSerializer
+from .serializers import VideoPostSerializer, SharedPostSerializer
 
 
 class PostList(generics.ListCreateAPIView):
@@ -94,3 +94,9 @@ class VideoPostDetail(generics.RetrieveUpdateDestroyAPIView):
         likes_count=Count('likes', distinct=True),
         comments_count=Count('comment', distinct=True)
     ).order_by('-created_at')
+
+class SharedPostList(generics.ListCreateAPIView): 
+    
+    serializer_class = SharedPostSerializer
+    queryset = SharedPost.objects.all()
+    

@@ -45,7 +45,8 @@ class VideoPost(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
-    video_url = models.URLField()
+    video = models.FileField( 
+        upload_to='video/', blank=True)
     video_filter = models.CharField( max_length=32, choices=video_filter_choices, default='normal' )
 
     class Meta:
@@ -53,3 +54,11 @@ class VideoPost(models.Model):
 
     def __str__(self):
         return f'{self.id} {self.title}'
+
+
+class SharedPost(models.Model):
+    original_post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='shared_posts')
+    shared_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self): return f"{self.shared_by.username} shared: {self.original_post.content[:50]}"

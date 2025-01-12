@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from posts.models import Post, VideoPost
+from posts.models import Post, VideoPost, SharedPost
 from likes.models import Like
 
 
@@ -58,7 +58,7 @@ class VideoPostSerializer(serializers.ModelSerializer):
 
     def validate_video(file): 
         valid_mime_types = ['video/mp4', 'video/avi', 'video/mov'] 
-        max_file_size = 1280 * 720 * 5120 #1280 x 720 px 5GB
+        max_file_size = 1920 * 1080 * 5120 #1920 x 1080 px 5GB
 
         if file.content_type not in valid_mime_types: 
             raise ValidationError('Unsupported file type.') 
@@ -72,8 +72,15 @@ class VideoPostSerializer(serializers.ModelSerializer):
     class Meta:
         model = VideoPost
         fields = [
-            'id', 'owner', 'is_owner', 'profile_id',
-            'profile_image', 'created_at', 'updated_at',
-            'title', 'content', 'image', 'image_filter',
-            'like_id', 'likes_count', 'comments_count',
+            'owner', 'created_at', 'updated_at', 'title',
+            'description', 'video', 'video_filter', 'profile_image',
+            'is_owner', 'like_id', 'likes_count', 'comments_count',
+            'profile_id'
+        ]
+
+class SharedPostSerializer(serializers.ModelSerializer): 
+    class Meta:
+         model = SharedPost 
+         fields = [
+            'original_post', 'shared_by', 'created_at'
         ]
