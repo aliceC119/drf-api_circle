@@ -1,8 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import User
+from cloudinary_storage.storage import MediaCloudinaryStorage
+from .validators import validate_youtube_url
 
 
 class Post(models.Model):
+    
     """
     Post model, related to 'owner', i.e. a User instance.
     Default image set so that we can always reference image.url.
@@ -47,7 +50,10 @@ class VideoPost(models.Model):
     description = models.TextField(blank=True)
     video = models.FileField( 
         upload_to='video/', blank=True)
-    video_filter = models.CharField( max_length=32, choices=video_filter_choices, default='normal' )
+    video_filter = models.CharField( 
+        max_length=32, choices=video_filter_choices, default='normal' )
+    youtube_url = models.URLField( 
+        validators=[validate_youtube_url], blank=True, null=True )
 
     class Meta:
         ordering = ['-created_at']

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from posts.models import Post, VideoPost, SharedPost
 from likes.models import Like
+from .validators import validate_youtube_url
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -55,18 +56,51 @@ class VideoPostSerializer(serializers.ModelSerializer):
     like_id = serializers.SerializerMethodField()
     likes_count = serializers.ReadOnlyField()
     comments_count = serializers.ReadOnlyField()
+    video = serializers.FileField(required=False)
+    youtube_url = serializers.URLField(required=False, validators=[validate_youtube_url])
 
-    def validate_video(file): 
-        valid_mime_types = ['video/mp4', 'video/avi', 'video/mov'] 
-        max_file_size = 1920 * 1080 * 5120 #1920 x 1080 px 5GB
+    MAX_VIDEO_SIZE = 5368709120 # 5 GB in 
+    
+    def validate_video(self, value): 
+        if value.size > self.MAX_VIDEO_SIZE: 
+            raise serializers.ValidationError("Video size should not exceed 100 MB.") 
+        return value 
+    
+    def validate(self, data): 
+        video = data.get('video', None) 
+        youtube_url = data.get('youtube_url', None) 
+        
+        if not video and not youtube_url: 
+            raise serializers.ValidationError("Either video or youtube_url must be provided.") 
+        
+        # Explicitly call the field-specific validation method 
+        if video: 
+            self.validate_video(video) 
+        return data
 
-        if file.content_type not in valid_mime_types: 
-            raise ValidationError('Unsupported file type.') 
+   # def validate_video(file): 
+        #valid_mime_types = ['video/mp4', 'video/avi', 'video/mov'] 
+        #max_file_size = 1920 * 1080 * 5120 #1920 x 1080 px 5GB
 
-        if file.size > max_file_size: 
-            raise ValidationError('File too large. Size should not exceed 5 GB.') 
+        #if file.content_type not in valid_mime_types: 
+            #raise ValidationError('Unsupported file type.') 
+
+        #if file.size > max_file_size: 
+            #raise ValidationError('File too large. Size should not exceed 5 GB.') 
             
-            return file
+            #return file
+    
+
+    def validate_media_file(self, value):
+        """
+        Check that the media file is either an image or a video.
+        """
+        if value.content_type.startswith('image'):
+            return value
+        elif value.content_type.startswith('video'):
+            return value
+        else:
+            raise serializers.ValidationError("Unsupported file type. Only images and videos are allowed.")
 
 
     class Meta:
@@ -75,8 +109,23 @@ class VideoPostSerializer(serializers.ModelSerializer):
             'owner', 'created_at', 'updated_at', 'title',
             'description', 'video', 'video_filter', 'profile_image',
             'is_owner', 'like_id', 'likes_count', 'comments_count',
-            'profile_id'
+            'profile_id','youtube_url'
         ]
+    
+    def get_is_owner(self, obj): 
+        request = self.context.get('request') 
+        if request and request.user: 
+            return obj.owner == request.user 
+        return False
+    
+    def get_like_id(self, obj): 
+        request = self.context.get('request') 
+        user = request.user 
+        if user.is_authenticated: 
+            like = Like.objects.filter( 
+                owner=user, post=obj ).first() 
+            return like.id if like else None 
+        return None
 
 class SharedPostSerializer(serializers.ModelSerializer): 
     class Meta:

@@ -2,7 +2,7 @@ from django.db.models import Count
 from rest_framework import generics, permissions, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_api.permissions import IsOwnerOrReadOnly
-from .models import Post, SharedPost
+from .models import Post, VideoPost, SharedPost
 from .serializers import PostSerializer
 from .serializers import VideoPostSerializer, SharedPostSerializer
 
@@ -38,8 +38,20 @@ class PostList(generics.ListCreateAPIView):
         'likes__created_at',
     ]
 
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+    def perform_create(self, serializer): 
+        media_file = self.request.FILES.get('media_file') 
+        if media_file: 
+            # Determine the media type 
+            if media_file.content_type.startswith('image'): 
+                media_type = 'image' 
+            elif media_file.content_type.startswith('video'): 
+                media_type = 'video' 
+            else: 
+                raise serializers.ValidationError("Unsupported file type.") 
+            
+            serializer.save(owner=self.request.user, media_type=media_type, media_file=media_file) 
+        else: 
+            serializer.save(owner=self.request.user)
 
 
 class PostDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -60,7 +72,7 @@ class VideoPostList(generics.ListCreateAPIView):
     """
     serializer_class = VideoPostSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    queryset = Post.objects.annotate(
+    queryset = VideoPost.objects.annotate(
         likes_count=Count('likes', distinct=True),
         comments_count=Count('comment', distinct=True)
     ).order_by('-created_at')
@@ -84,13 +96,16 @@ class VideoPostList(generics.ListCreateAPIView):
         'likes__created_at',
     ]
 
+    def perform_create(self, serializer): 
+        serializer.save(owner=self.request.user)
+
 class VideoPostDetail(generics.RetrieveUpdateDestroyAPIView):
     """
     Retrieve a video post and edit or delete it if you own it.
     """
     serializer_class = VideoPostSerializer
     permission_classes = [IsOwnerOrReadOnly]
-    queryset = Post.objects.annotate(
+    queryset = VideoPost.objects.annotate(
         likes_count=Count('likes', distinct=True),
         comments_count=Count('comment', distinct=True)
     ).order_by('-created_at')
