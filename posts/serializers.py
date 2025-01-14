@@ -63,7 +63,7 @@ class VideoPostSerializer(serializers.ModelSerializer):
     
     def validate_video(self, value): 
         if value.size > self.MAX_VIDEO_SIZE: 
-            raise serializers.ValidationError("Video size should not exceed 100 MB.") 
+            raise serializers.ValidationError("Video size should not exceed 5GB.") 
         return value 
     
     def validate(self, data): 
@@ -102,6 +102,18 @@ class VideoPostSerializer(serializers.ModelSerializer):
         else:
             raise serializers.ValidationError("Unsupported file type. Only images and videos are allowed.")
 
+    def get_is_owner(self, obj): 
+        request = self.context.get('request') 
+        if request and request.user: 
+            return obj.owner == request.user 
+        return False
+    
+    def get_like_id(self, obj): 
+        user = self.context['request'].user 
+        if user.is_authenticated: 
+            like = Like.objects.filter(owner=user, video_post=obj).first() 
+            return like.id if like else None 
+        return None
 
     class Meta:
         model = VideoPost
@@ -112,21 +124,6 @@ class VideoPostSerializer(serializers.ModelSerializer):
             'profile_id','youtube_url'
         ]
     
-    def get_is_owner(self, obj): 
-        request = self.context.get('request') 
-        if request and request.user: 
-            return obj.owner == request.user 
-        return False
-    
-    def get_like_id(self, obj): 
-        request = self.context.get('request') 
-        user = request.user 
-        if user.is_authenticated: 
-            like = Like.objects.filter( 
-                owner=user, post=obj ).first() 
-            return like.id if like else None 
-        return None
-
 class SharedPostSerializer(serializers.ModelSerializer): 
     class Meta:
          model = SharedPost 

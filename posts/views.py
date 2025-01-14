@@ -3,8 +3,8 @@ from rest_framework import generics, permissions, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_api.permissions import IsOwnerOrReadOnly
 from .models import Post, VideoPost, SharedPost
-from .serializers import PostSerializer
-from .serializers import VideoPostSerializer, SharedPostSerializer
+from .serializers import PostSerializer,VideoPostSerializer, SharedPostSerializer
+
 
 
 class PostList(generics.ListCreateAPIView):
@@ -38,7 +38,8 @@ class PostList(generics.ListCreateAPIView):
         'likes__created_at',
     ]
 
-    def perform_create(self, serializer): 
+    def perform_create(self, serializer):
+        user = self.request.user
         media_file = self.request.FILES.get('media_file') 
         if media_file: 
             # Determine the media type 
@@ -74,7 +75,7 @@ class VideoPostList(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     queryset = VideoPost.objects.annotate(
         likes_count=Count('likes', distinct=True),
-        comments_count=Count('comment', distinct=True)
+        comments_count=Count('comments', distinct=True)
     ).order_by('-created_at')
     filter_backends = [
         filters.OrderingFilter,
@@ -97,7 +98,20 @@ class VideoPostList(generics.ListCreateAPIView):
     ]
 
     def perform_create(self, serializer): 
-        serializer.save(owner=self.request.user)
+        user = self.request.user 
+        media_file = self.request.FILES.get('media_file')
+        if media_file: 
+            if media_file.content_type.startswith('image'): 
+                media_type = 'image' 
+            elif media_file.content_type.startswith('video'): 
+                media_type = 'video' 
+            else: 
+                    raise serializers.ValidationError("Unsupported file type.") 
+            serializer.save(owner=user, media_type=media_type, media_file=media_file) 
+        else: 
+            serializer.save(owner=user)
+    
+
 
 class VideoPostDetail(generics.RetrieveUpdateDestroyAPIView):
     """
@@ -107,7 +121,7 @@ class VideoPostDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsOwnerOrReadOnly]
     queryset = VideoPost.objects.annotate(
         likes_count=Count('likes', distinct=True),
-        comments_count=Count('comment', distinct=True)
+        comments_count=Count('comments', distinct=True)
     ).order_by('-created_at')
 
 class SharedPostList(generics.ListCreateAPIView): 

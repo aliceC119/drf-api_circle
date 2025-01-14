@@ -54,6 +54,8 @@ class VideoPost(models.Model):
         max_length=32, choices=video_filter_choices, default='normal' )
     youtube_url = models.URLField( 
         validators=[validate_youtube_url], blank=True, null=True )
+    #likes = models.PositiveIntegerField(default=0)
+    comments = models.TextField(blank=True)
 
     class Meta:
         ordering = ['-created_at']
