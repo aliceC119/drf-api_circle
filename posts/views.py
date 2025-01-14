@@ -3,8 +3,7 @@ from rest_framework import generics, permissions, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_api.permissions import IsOwnerOrReadOnly
 from .models import Post, VideoPost, SharedPost
-from .serializers import PostSerializer,VideoPostSerializer, SharedPostSerializer
-
+from .serializers import PostSerializer, VideoPostSerializer, SharedPostSerializer 
 
 
 class PostList(generics.ListCreateAPIView):
@@ -96,6 +95,12 @@ class VideoPostList(generics.ListCreateAPIView):
         'comments_count',
         'likes__created_at',
     ]
+    def post(self, request, *args, **kwargs): 
+        serializer = VideoPostSerializer(data=request.data, context={'request': request}) 
+        if serializer.is_valid(): 
+            serializer.save() 
+            return Response(serializer.data, status=status.HTTP_201_CREATED) 
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def perform_create(self, serializer): 
         user = self.request.user 
@@ -112,6 +117,12 @@ class VideoPostList(generics.ListCreateAPIView):
             serializer.save(owner=user)
     
 
+    def post(self, request, *args, **kwargs):
+        serializer = VideoPostSerializer(data=request.data, context={'request': request}) 
+        if serializer.is_valid(): 
+            serializer.save() 
+            return Response(serializer.data, status=status.HTTP_201_CREATED) 
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class VideoPostDetail(generics.RetrieveUpdateDestroyAPIView):
     """

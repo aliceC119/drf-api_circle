@@ -49,7 +49,7 @@ class VideoPost(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     video = models.FileField( 
-        upload_to='video/', blank=True)
+        upload_to='video/', blank=True, storage=MediaCloudinaryStorage())
     video_filter = models.CharField( 
         max_length=32, choices=video_filter_choices, default='normal' )
     youtube_url = models.URLField( 
