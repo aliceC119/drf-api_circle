@@ -123,10 +123,18 @@ class VideoPostSerializer(serializers.ModelSerializer):
             'is_owner', 'like_id', 'likes_count', 'comments_count',
             'profile_id','youtube_url'
         ]
+
+
+class SharedPostSerializer(serializers.ModelSerializer):
+    original_post_owner = serializers.ReadOnlyField(source='original_post.owner.username')
+    original_post = serializers.ReadOnlyField(source='original_post.id')
+    shared_by = serializers.ReadOnlyField(source='shared_by.username')
     
-class SharedPostSerializer(serializers.ModelSerializer): 
+
     class Meta:
-         model = SharedPost 
-         fields = [
-            'original_post', 'shared_by', 'created_at'
+        model = SharedPost
+        fields = [
+            'original_post_owner','original_post', 'shared_by', 'created_at',
+            'updated_at', 'content', 'image', 'image_filter'
         ]
+   

@@ -128,4 +128,13 @@ class SharedPostList(generics.ListCreateAPIView):
     
     serializer_class = SharedPostSerializer
     queryset = SharedPost.objects.all()
+
+class SharedPostDetail(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Retrieve a shared post and edit or delete it if you own it.
+    """
+    serializer_class = SharedPostSerializer
+    permission_classes = [IsOwnerOrReadOnly]
+    queryset = SharedPost.objects.all()
+
     
