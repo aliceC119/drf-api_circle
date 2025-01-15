@@ -15,9 +15,18 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework.routers import DefaultRouter 
+from groups.views import GroupViewSet
+from posts.views import PostList, PostDetail
+
+router = DefaultRouter() 
+router.register(r'groups', GroupViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/', include(router.urls)),
+    path('api/posts/', PostList.as_view(), name='post-list'), 
+    path('api/posts/<int:pk>/', PostDetail.as_view(), name='post-detail'),
     path('', include('profiles.urls')),
     path('', include('posts.urls')),
     path('', include('likes.urls')),

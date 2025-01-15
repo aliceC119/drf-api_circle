@@ -4,6 +4,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from drf_api.permissions import IsOwnerOrReadOnly
 from .models import Post, VideoPost, SharedPost
 from .serializers import PostSerializer, VideoPostSerializer, SharedPostSerializer 
+from groups.models import Group
+
 
 
 class PostList(generics.ListCreateAPIView):
@@ -39,6 +41,8 @@ class PostList(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         user = self.request.user
+        group_id = self.request.data.get('group') 
+        group = Group.objects.get(id=group_id)
         media_file = self.request.FILES.get('media_file') 
         if media_file: 
             # Determine the media type 
@@ -64,6 +68,8 @@ class PostDetail(generics.RetrieveUpdateDestroyAPIView):
         likes_count=Count('likes', distinct=True),
         comments_count=Count('comment', distinct=True)
     ).order_by('-created_at')
+
+
 
 class VideoPostList(generics.ListCreateAPIView):
     """

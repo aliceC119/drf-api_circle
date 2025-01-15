@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from groups.models import Group
 from cloudinary_storage.storage import MediaCloudinaryStorage
 from .validators import validate_youtube_url
 
