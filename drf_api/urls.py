@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter 
 from groups.views import GroupViewSet
-from posts.views import PostList, PostDetail
+from posts.views import PostList, PostDetail, VideoPost, VideoPostDetail
 
 router = DefaultRouter() 
 router.register(r'groups', GroupViewSet)
@@ -27,6 +27,8 @@ urlpatterns = [
     path('api/', include(router.urls)),
     path('api/posts/', PostList.as_view(), name='post-list'), 
     path('api/posts/<int:pk>/', PostDetail.as_view(), name='post-detail'),
+    path('api/videoposts/', PostList.as_view(), name='videopost-list'), 
+    path('api/videoposts/<int:pk>/', VideoPostDetail.as_view(), name='videopost-detail'),
     path('', include('profiles.urls')),
     path('', include('posts.urls')),
     path('', include('likes.urls')),

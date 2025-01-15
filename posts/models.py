@@ -1,6 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import User
-from groups.models import Group
 from cloudinary_storage.storage import MediaCloudinaryStorage
 from .validators import validate_youtube_url
 
@@ -50,7 +49,7 @@ class VideoPost(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     video = models.FileField( 
-        upload_to='video/', blank=True, storage=MediaCloudinaryStorage())
+        upload_to='video/', blank=True)
     video_filter = models.CharField( 
         max_length=32, choices=video_filter_choices, default='normal' )
     youtube_url = models.URLField( 
