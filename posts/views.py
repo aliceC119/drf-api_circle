@@ -71,6 +71,7 @@ class PostDetail(generics.RetrieveUpdateDestroyAPIView):
         comments_count=Count('comment', distinct=True)
     ).order_by('-created_at')
 
+
 class VideoPostList(generics.ListCreateAPIView):
     """
     List videoposts or create a post if logged in
@@ -101,28 +102,12 @@ class VideoPostList(generics.ListCreateAPIView):
         'comments_count',
         'likes__created_at',
     ]
-   
-    def post(self, request, *args, **kwargs):
-        if 'video' not in request.FILES:
-            return Response({"error": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
-
-        video = request.FILES['video']
-        if video.size == 0:
-            return Response({"error": "Empty file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
-
-        serializer = VideoPostSerializer(data=request.data)
-        if serializer.is_valid():
-            try:
-                serializer.save() 
-                return Response(serializer.data, status=status.HTTP_201_CREATED) 
-            except ValidationError as e: 
-                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST) 
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def validate_video(self, value): 
-        if value.size == 0: 
-            raise serializers.ValidationError("Empty file uploaded.") 
-        return value
+    def post(self, request, *args, **kwargs): 
+        serializer = VideoPostSerializer(data=request.data, context={'request': request}) 
+        if serializer.is_valid(): 
+            serializer.save() 
+            return Response(serializer.data, status=status.HTTP_201_CREATED) 
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def perform_create(self, serializer): 
         user = self.request.user 
@@ -139,6 +124,12 @@ class VideoPostList(generics.ListCreateAPIView):
             serializer.save(owner=user)
     
 
+    def post(self, request, *args, **kwargs):
+        serializer = VideoPostSerializer(data=request.data, context={'request': request}) 
+        if serializer.is_valid(): 
+            serializer.save() 
+            return Response(serializer.data, status=status.HTTP_201_CREATED) 
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class VideoPostDetail(generics.RetrieveUpdateDestroyAPIView):
     """
@@ -163,5 +154,3 @@ class SharedPostDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = SharedPostSerializer
     permission_classes = [IsOwnerOrReadOnly]
     queryset = SharedPost.objects.all()
-
-    
