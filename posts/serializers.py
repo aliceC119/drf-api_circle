@@ -5,6 +5,8 @@ from .validators import validate_youtube_url
 import cloudinary 
 import cloudinary.uploader
 
+
+
 def upload(video):
     try:
         result = cloudinary.uploader.upload(video, resource_type="video")
@@ -36,6 +38,10 @@ class PostSerializer(serializers.ModelSerializer):
             )
         return value
 
+    def get_is_owner(self, obj):
+        request = self.context['request']
+        return request.user == obj.owner
+
     def get_like_id(self, obj):
         user = self.context['request'].user
         if user.is_authenticated:
@@ -62,7 +68,7 @@ class VideoPostSerializer(serializers.ModelSerializer):
     like_id = serializers.SerializerMethodField()
     likes_count = serializers.ReadOnlyField()
     comments_count = serializers.ReadOnlyField()
-    video = serializers.FileField(required=True)
+    video = serializers.FileField(required=False)
     youtube_url = serializers.URLField(required=False, validators=[validate_youtube_url])
 
     MAX_VIDEO_SIZE = 10 * 1024 * 1024 * 1024 # 10 GB in bytes 
@@ -80,25 +86,27 @@ class VideoPostSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Unsupported file type. Only MP4 and MOV are allowed.") 
         
         return value
-
-        
+    
+    
+    
     def validate(self, data): 
         video = data.get('video', None) 
         youtube_url = data.get('youtube_url', None) 
         
         if not video and not youtube_url: 
-            raise serializers.ValidationError("Either video or youtube_url must be provided.")
+            raise serializers.ValidationError("Either video or youtube_url must be provided.") 
         
+        # Explicitly call the field-specific validation method 
         if video: 
             self.validate_video(video) 
-        return data 
-    
+        return data
+ 
     def create(self, validated_data): 
         video = validated_data.get('video') 
         if video: 
             validated_data['video_url'] = upload(video) 
         return super().create(validated_data)
-    
+      
 
     def validate_media_file(self, value):
         """
@@ -130,20 +138,12 @@ class VideoPostSerializer(serializers.ModelSerializer):
             'id','owner', 'created_at', 'updated_at', 'title',
             'description', 'video', 'video_filter', 'profile_image',
             'is_owner', 'like_id', 'likes_count', 'comments_count',
-            'profile_id','youtube_url', 'video_url'
+            'profile_id','youtube_url',
         ]
-
-
-class SharedPostSerializer(serializers.ModelSerializer):
-    original_post_owner = serializers.ReadOnlyField(source='original_post.owner.username')
-    original_post = serializers.ReadOnlyField(source='original_post.id')
-    shared_by = serializers.ReadOnlyField(source='shared_by.username')
     
-
+class SharedPostSerializer(serializers.ModelSerializer): 
     class Meta:
-        model = SharedPost
-        fields = [
-            'original_post_owner','original_post', 'shared_by', 'created_at',
-            'updated_at', 'content', 'image', 'image_filter'
+         model = SharedPost 
+         fields = [
+            'original_post', 'shared_by', 'created_at'
         ]
-   

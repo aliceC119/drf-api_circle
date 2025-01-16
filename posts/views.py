@@ -1,17 +1,12 @@
 from django.db.models import Count
-from rest_framework import generics, permissions, filters, status
-from rest_framework.exceptions import ValidationError
+from rest_framework import generics, permissions, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_api.permissions import IsOwnerOrReadOnly
 from .models import Post, VideoPost, SharedPost
 from .serializers import PostSerializer,VideoPostSerializer, SharedPostSerializer
-import cloudinary 
-import cloudinary.uploader
 
 
 
-
-    
 class PostList(generics.ListCreateAPIView):
     """
     List posts or create a post if logged in
@@ -71,7 +66,6 @@ class PostDetail(generics.RetrieveUpdateDestroyAPIView):
         comments_count=Count('comment', distinct=True)
     ).order_by('-created_at')
 
-
 class VideoPostList(generics.ListCreateAPIView):
     """
     List videoposts or create a post if logged in
@@ -102,12 +96,6 @@ class VideoPostList(generics.ListCreateAPIView):
         'comments_count',
         'likes__created_at',
     ]
-    def post(self, request, *args, **kwargs): 
-        serializer = VideoPostSerializer(data=request.data, context={'request': request}) 
-        if serializer.is_valid(): 
-            serializer.save() 
-            return Response(serializer.data, status=status.HTTP_201_CREATED) 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def perform_create(self, serializer): 
         user = self.request.user 
@@ -124,12 +112,6 @@ class VideoPostList(generics.ListCreateAPIView):
             serializer.save(owner=user)
     
 
-    def post(self, request, *args, **kwargs):
-        serializer = VideoPostSerializer(data=request.data, context={'request': request}) 
-        if serializer.is_valid(): 
-            serializer.save() 
-            return Response(serializer.data, status=status.HTTP_201_CREATED) 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class VideoPostDetail(generics.RetrieveUpdateDestroyAPIView):
     """
@@ -146,7 +128,7 @@ class SharedPostList(generics.ListCreateAPIView):
     
     serializer_class = SharedPostSerializer
     queryset = SharedPost.objects.all()
-
+    
 class SharedPostDetail(generics.RetrieveUpdateDestroyAPIView):
     """
     Retrieve a shared post and edit or delete it if you own it.
