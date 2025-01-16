@@ -18,11 +18,13 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter 
 from groups.views import GroupViewSet
 from posts.views import PostList, PostDetail, VideoPost, VideoPostDetail
+from .views import root_route
 
 router = DefaultRouter() 
 router.register(r'groups', GroupViewSet)
 
 urlpatterns = [
+    path('', root_route),
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
     path('api/posts/', PostList.as_view(), name='post-list'), 

@@ -50,6 +50,7 @@ class VideoPost(models.Model):
     description = models.TextField(blank=True)
     video = models.FileField( 
         upload_to='video/', blank=True)
+    video_url = models.URLField(max_length=200, blank=True, null=True) # Add this field
     video_filter = models.CharField( 
         max_length=32, choices=video_filter_choices, default='normal' )
     youtube_url = models.URLField( 

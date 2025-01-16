@@ -1,12 +1,17 @@
 from django.db.models import Count
-from rest_framework import generics, permissions, filters
+from rest_framework import generics, permissions, filters, status
+from rest_framework.exceptions import ValidationError
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_api.permissions import IsOwnerOrReadOnly
 from .models import Post, VideoPost, SharedPost
 from .serializers import PostSerializer,VideoPostSerializer, SharedPostSerializer
+import cloudinary 
+import cloudinary.uploader
 
 
 
+
+    
 class PostList(generics.ListCreateAPIView):
     """
     List posts or create a post if logged in
@@ -96,6 +101,28 @@ class VideoPostList(generics.ListCreateAPIView):
         'comments_count',
         'likes__created_at',
     ]
+   
+    def post(self, request, *args, **kwargs):
+        if 'video' not in request.FILES:
+            return Response({"error": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
+
+        video = request.FILES['video']
+        if video.size == 0:
+            return Response({"error": "Empty file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = VideoPostSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                serializer.save() 
+                return Response(serializer.data, status=status.HTTP_201_CREATED) 
+            except ValidationError as e: 
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST) 
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def validate_video(self, value): 
+        if value.size == 0: 
+            raise serializers.ValidationError("Empty file uploaded.") 
+        return value
 
     def perform_create(self, serializer): 
         user = self.request.user 

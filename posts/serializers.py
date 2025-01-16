@@ -2,7 +2,17 @@ from rest_framework import serializers
 from posts.models import Post, VideoPost, SharedPost
 from likes.models import Like
 from .validators import validate_youtube_url
+import cloudinary 
+import cloudinary.uploader
 
+def upload(video):
+    try:
+        result = cloudinary.uploader.upload(video, resource_type="video")
+        print(f"Upload result: {result}")
+        return result['secure_url']
+    except cloudinary.exceptions.Error as e:
+        print(f"Cloudinary upload error: {e}")
+        raise serializers.ValidationError("Failed to upload video to Cloudinary.")
 
 class PostSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')
@@ -25,10 +35,6 @@ class PostSerializer(serializers.ModelSerializer):
                 'Image width larger than 4096px!'
             )
         return value
-
-    def get_is_owner(self, obj):
-        request = self.context['request']
-        return request.user == obj.owner
 
     def get_like_id(self, obj):
         user = self.context['request'].user
@@ -56,39 +62,42 @@ class VideoPostSerializer(serializers.ModelSerializer):
     like_id = serializers.SerializerMethodField()
     likes_count = serializers.ReadOnlyField()
     comments_count = serializers.ReadOnlyField()
-    video = serializers.FileField(required=False)
+    video = serializers.FileField(required=True)
     youtube_url = serializers.URLField(required=False, validators=[validate_youtube_url])
 
-    MAX_VIDEO_SIZE = 5368709120 # 5 GB in 
+    MAX_VIDEO_SIZE = 10 * 1024 * 1024 * 1024 # 10 GB in bytes 
+    MAX_RESOLUTION_WIDTH = 1280 
+    MAX_RESOLUTION_HEIGHT = 720
+    ALLOWED_FILE_TYPES = ['video/mp4', 'video/quicktime'] # mp4 and mov
+
+
     
     def validate_video(self, value): 
         if value.size > self.MAX_VIDEO_SIZE: 
-            raise serializers.ValidationError("Video size should not exceed 5GB.") 
-        return value 
-    
+            raise serializers.ValidationError("Video size should not exceed 10GB.") 
+
+        if value.content_type not in self.ALLOWED_FILE_TYPES: 
+            raise serializers.ValidationError("Unsupported file type. Only MP4 and MOV are allowed.") 
+        
+        return value
+
+        
     def validate(self, data): 
         video = data.get('video', None) 
         youtube_url = data.get('youtube_url', None) 
         
         if not video and not youtube_url: 
-            raise serializers.ValidationError("Either video or youtube_url must be provided.") 
+            raise serializers.ValidationError("Either video or youtube_url must be provided.")
         
-        # Explicitly call the field-specific validation method 
         if video: 
             self.validate_video(video) 
-        return data
-
-   # def validate_video(file): 
-        #valid_mime_types = ['video/mp4', 'video/avi', 'video/mov'] 
-        #max_file_size = 1920 * 1080 * 5120 #1920 x 1080 px 5GB
-
-        #if file.content_type not in valid_mime_types: 
-            #raise ValidationError('Unsupported file type.') 
-
-        #if file.size > max_file_size: 
-            #raise ValidationError('File too large. Size should not exceed 5 GB.') 
-            
-            #return file
+        return data 
+    
+    def create(self, validated_data): 
+        video = validated_data.get('video') 
+        if video: 
+            validated_data['video_url'] = upload(video) 
+        return super().create(validated_data)
     
 
     def validate_media_file(self, value):
@@ -121,7 +130,7 @@ class VideoPostSerializer(serializers.ModelSerializer):
             'id','owner', 'created_at', 'updated_at', 'title',
             'description', 'video', 'video_filter', 'profile_image',
             'is_owner', 'like_id', 'likes_count', 'comments_count',
-            'profile_id','youtube_url'
+            'profile_id','youtube_url', 'video_url'
         ]
 
 
