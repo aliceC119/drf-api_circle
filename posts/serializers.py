@@ -68,24 +68,42 @@ class VideoPostSerializer(serializers.ModelSerializer):
     like_id = serializers.SerializerMethodField()
     likes_count = serializers.ReadOnlyField()
     comments_count = serializers.ReadOnlyField()
-    video = serializers.FileField(required=False)
+    #video = serializers.FileField(required=False)
     youtube_url = serializers.URLField(required=False, validators=[validate_youtube_url])
 
-    MAX_VIDEO_SIZE = 10 * 1024 * 1024 * 1024 # 10 GB in bytes 
-    MAX_RESOLUTION_WIDTH = 1280 
-    MAX_RESOLUTION_HEIGHT = 720
-    ALLOWED_FILE_TYPES = ['video/mp4', 'video/quicktime'] # mp4 and mov
+    #MAX_VIDEO_SIZE = 10 * 1024 * 1024 * 1024 # 10 GB in bytes 
+    #MAX_RESOLUTION_WIDTH = 1280 
+    #MAX_RESOLUTION_HEIGHT = 720
+    #ALLOWED_FILE_TYPES = ['video/mp4', 'video/quicktime'] # mp4 and mov
 
 
-    
-    def validate_video(self, value): 
-        if value.size > self.MAX_VIDEO_SIZE: 
-            raise serializers.ValidationError("Video size should not exceed 10GB.") 
+    #Commented out the validate_video method
+    #def validate_video(self, value): 
+    #   request = self.context.get('request')
+    #    if request and request.method == 'POST':
+    #        if value is None:
+    #            return
+    #        if not value.name.lower().endswith(('.mp4', '.avi', 'mov')):
+    #            raise serializers.ValidationError("Only MP4, AVI, and MOV video files are allowed.")
+    #        elif value.size > 50 * 1024 * 1024:
+    #            raise serializer.ValidationError('Video size larger than 50MB!')
+    #        
+    #        else:
+    #            if value is None:
+    #                return self.instance.video
+    #            if not value.name.lower().endswith(('.mp4', '.avi', '.mov')):
+    #                raise werislizers.ValidaitonError("Only MP4, AVI, and MOV video files are allowed.")
+    #            elif value.size > 50 * 1024 * 1024:
+    #                raise serializers.ValdationError('Video size larger than 50MB!')
+    #        return value
 
-        if value.content_type not in self.ALLOWED_FILE_TYPES: 
-            raise serializers.ValidationError("Unsupported file type. Only MP4 and MOV are allowed.") 
+        #if value.size > self.MAX_VIDEO_SIZE: 
+            #raise serializers.ValidationError("Video size should not exceed 10GB.") 
+
+        #if value.content_type not in self.ALLOWED_FILE_TYPES: 
+            #raise serializers.ValidationError("Unsupported file type. Only MP4 and MOV are allowed.") 
         
-        return value
+        #return value
     
     
     
@@ -96,16 +114,20 @@ class VideoPostSerializer(serializers.ModelSerializer):
         if not video and not youtube_url: 
             raise serializers.ValidationError("Either video or youtube_url must be provided.") 
         
+        if 'video' in data and self.instance and self.instance.video != data['video']:
+            video = data.get('video')
+
+            self.validate_video(video)
         # Explicitly call the field-specific validation method 
-        if video: 
-            self.validate_video(video) 
+        #if video: 
+            #self.validate_video(video) 
         return data
  
-    def create(self, validated_data): 
-        video = validated_data.get('video') 
-        if video: 
-            validated_data['video_url'] = upload(video) 
-        return super().create(validated_data)
+    #def create(self, validated_data): 
+    #    video = validated_data.get('video') 
+    #    if video: 
+    #        validated_data['video_url'] = upload(video) 
+    #    return super().create(validated_data)
       
 
     def validate_media_file(self, value):
@@ -136,9 +158,9 @@ class VideoPostSerializer(serializers.ModelSerializer):
         model = VideoPost
         fields = [
             'id','owner', 'created_at', 'updated_at', 'title',
-            'description', 'video', 'video_filter', 'profile_image',
+            'description', 'video_filter', 'profile_image',
             'is_owner', 'like_id', 'likes_count', 'comments_count',
-            'profile_id','youtube_url',
+            'profile_id','youtube_url','name'
         ]
     
 class SharedPostSerializer(serializers.ModelSerializer): 

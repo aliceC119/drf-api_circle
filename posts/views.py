@@ -98,18 +98,19 @@ class VideoPostList(generics.ListCreateAPIView):
     ]
 
     def perform_create(self, serializer): 
-        user = self.request.user 
-        media_file = self.request.FILES.get('media_file')
-        if media_file: 
-            if media_file.content_type.startswith('image'): 
-                media_type = 'image' 
-            elif media_file.content_type.startswith('video'): 
-                media_type = 'video' 
-            else: 
-                    raise serializers.ValidationError("Unsupported file type.") 
-            serializer.save(owner=user, media_type=media_type, media_file=media_file) 
-        else: 
-            serializer.save(owner=user)
+        serializer.save(owner=self.request.user)
+        #user = self.request.user 
+        #media_file = self.request.FILES.get('media_file')
+        #if media_file: 
+            #if media_file.content_type.startswith('image'): 
+                #media_type = 'image' 
+            #elif media_file.content_type.startswith('video'): 
+                #media_type = 'video' 
+            #else: 
+                    #raise serializers.ValidationError("Unsupported file type.") 
+            #serializer.save(owner=user, media_type=media_type, media_file=media_file) 
+        #else: 
+            #serializer.save(owner=user)
     
 
 

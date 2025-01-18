@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
-from cloudinary_storage.storage import MediaCloudinaryStorage
+from cloudinary_storage.storage import VideoMediaCloudinaryStorage
+from cloudinary_storage.storage import RawMediaCloudinaryStorage
+from cloudinary_storage.validators import validate_video
 from .validators import validate_youtube_url
 
 
@@ -43,13 +45,15 @@ class VideoPost(models.Model):
     video_filter_choices = [ 
     ('normal', 'Normal'), ('sepia', 'Sepia'), ('grayscale', 'Grayscale')
     ]
+    name = models.CharField(max_length=100, blank=True, null=True)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
-    video = models.FileField( 
-        upload_to='video/', blank=True)
+
+    #video = models.ImageField(upload_to='videos/', blank=True, 
+    #storage=VideoMediaCloudinaryStorage(),validators=[validate_video])
     video_url = models.URLField(max_length=200, blank=True, null=True) # Add this field
     video_filter = models.CharField( 
         max_length=32, choices=video_filter_choices, default='normal' )
