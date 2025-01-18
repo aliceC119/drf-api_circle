@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from posts.models import Post, VideoPost, SharedPost
+from posts.models import Post, VideoPost, SharedPost, SharedVideoPost
 from likes.models import Like
 from .validators import validate_youtube_url
 import cloudinary 
@@ -168,4 +168,12 @@ class SharedPostSerializer(serializers.ModelSerializer):
          model = SharedPost 
          fields = [
             'original_post', 'shared_by', 'created_at'
+        ]
+
+
+class SharedVideoPostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SharedVideoPost
+        fields = [
+            'original_post', 'shared_by', 'created_at', 'updated_at', 'content'
         ]

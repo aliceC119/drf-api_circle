@@ -1,8 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
-from cloudinary_storage.storage import VideoMediaCloudinaryStorage
-from cloudinary_storage.storage import RawMediaCloudinaryStorage
-from cloudinary_storage.validators import validate_video
+#from cloudinary_storage.storage import VideoMediaCloudinaryStorage
+#from cloudinary_storage.storage import RawMediaCloudinaryStorage
+#from cloudinary_storage.validators import validate_video
 from .validators import validate_youtube_url
 
 
@@ -95,3 +95,15 @@ class SharedPost(models.Model):
     )
 
     def __str__(self): return f"{self.shared_by.username} shared: {self.original_post.content[:50]}"
+
+class SharedVideoPost(models.Model):
+    original_post = models.ForeignKey(VideoPost, 
+        on_delete=models.CASCADE, related_name='shared_video_posts')
+    shared_by = models.ForeignKey(User, on_delete=models.CASCADE, 
+        related_name='shared_video_posts_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    content = models.TextField(blank=True)
+
+    def __str__(self): return f"{self.shared_by.username} shared: {self.original_post.title}"
+

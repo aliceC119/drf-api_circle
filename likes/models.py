@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from posts.models import Post, VideoPost
+from posts.models import Post, VideoPost, SharedPost, SharedVideoPost
 
 
 class Like(models.Model):
@@ -16,12 +16,18 @@ class Like(models.Model):
     video_post = models.ForeignKey(
         VideoPost, related_name='likes', on_delete=models.CASCADE, null=True, blank=True
     )
+    shared_post = models.ForeignKey( 
+        SharedPost, related_name='likes', on_delete=models.CASCADE, null=True, blank=True 
+    ) 
+    shared_video_post = models.ForeignKey( 
+        SharedVideoPost, related_name='likes', on_delete=models.CASCADE, null=True, blank=True 
+    )
    
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-created_at']
-        unique_together = ['owner', 'post', 'video_post']
+        unique_together = ['owner', 'post', 'video_post', 'shared_post', 'shared_video_post']
 
     def __str__(self):
-        return f'{self.owner} {self.post} {self.video_post}'
+        return f'{self.owner} {self.post} {self.video_post} {self.shared_post} {self.shared_video_post}'

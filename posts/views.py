@@ -2,8 +2,8 @@ from django.db.models import Count
 from rest_framework import generics, permissions, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_api.permissions import IsOwnerOrReadOnly
-from .models import Post, VideoPost, SharedPost
-from .serializers import PostSerializer,VideoPostSerializer, SharedPostSerializer
+from .models import Post, VideoPost, SharedPost, SharedVideoPost
+from .serializers import PostSerializer,VideoPostSerializer, SharedPostSerializer, SharedVideoPostSerializer
 
 
 
@@ -98,8 +98,9 @@ class VideoPostList(generics.ListCreateAPIView):
     ]
 
     def perform_create(self, serializer): 
+        
+        user = self.request.user 
         serializer.save(owner=self.request.user)
-        #user = self.request.user 
         #media_file = self.request.FILES.get('media_file')
         #if media_file: 
             #if media_file.content_type.startswith('image'): 
@@ -137,3 +138,23 @@ class SharedPostDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = SharedPostSerializer
     permission_classes = [IsOwnerOrReadOnly]
     queryset = SharedPost.objects.all()
+
+
+class SharedVideoPostList(generics.ListCreateAPIView):
+    """
+    List shared video posts or create a shared video post if logged in.
+    """
+    serializer_class = SharedVideoPostSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    queryset = SharedVideoPost.objects.all().order_by('-created_at')
+
+    def perform_create(self, serializer):
+        serializer.save(shared_by=self.request.user)
+
+class SharedVideoPostDetail(generics.RetrieveDestroyAPIView):
+    """
+    Retrieve or delete a shared video post if you own it.
+    """
+    serializer_class = SharedVideoPostSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    queryset = SharedVideoPost.objects.all()
